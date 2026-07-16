@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import type { OcrResult } from "@/types/ocr";
+
 let ocrInstance: any = null;
 let initializing = false;
 
@@ -65,12 +67,12 @@ async function getOcrInstance(): Promise<any> {
 
 export async function runOcr(
   imageSource: Blob | File | HTMLImageElement
-): Promise<any> {
+): Promise<OcrResult> {
   const ocr = await getOcrInstance();
   console.log("[PaddleOCR] Starting recognition...");
   const [result] = await ocr.predict(imageSource);
   console.log("[PaddleOCR] Recognition complete");
-  return result;
+  return result as OcrResult;
 }
 
 export function resetOcrInstance() {

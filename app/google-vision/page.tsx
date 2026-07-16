@@ -5,11 +5,11 @@ import dynamic from "next/dynamic";
 const OCRWorkspace = dynamic(() => import("@/components/OCRWorkspace"), {
   ssr: false,
   loading: () => (
-    <div className="min-h-[400px] flex items-center justify-center">
+    <div className="loading-state">
       <div className="text-center">
-        <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+        <span className="spinner mx-auto mb-4 block" aria-hidden="true" />
         <p className="text-on-surface-variant font-body-md text-body-md">
-          Loading Google Vision AI engine...
+          Loading the Google Vision workbench…
         </p>
       </div>
     </div>

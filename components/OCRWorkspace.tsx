@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { UploadArea } from "@/components/UploadArea";
 import { ImagePreview } from "@/components/ImagePreview";
 import { OCRResultTable } from "@/components/OCRResultTable";
+import { AIStructuredTable } from "@/components/AIStructuredTable";
 import { ActionButtons } from "@/components/ActionButtons";
 import { useClipboardPaste } from "@/hooks/useClipboardPaste";
 import { useOCR } from "@/hooks/useOCR";
@@ -23,16 +24,25 @@ function getEngineLabel(engine: OcrEngine): string {
 
 export default function OCRWorkspace({ engine }: OCRWorkspaceProps) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [resultView, setResultView] = useState<"raw" | "ai">("raw");
   const {
     status,
     result,
     error,
     rows,
+    aiStatus,
+    aiResult,
+    aiError,
     processImage,
+    retryAi,
     clearResults,
     updateRowText,
     deleteRow,
+    updateAiCell,
   } = useOCR();
+
+  const showingAi = resultView === "ai" && Boolean(aiResult);
 
   const handleFileSelect = useCallback(
     (file: File) => {
@@ -41,6 +51,8 @@ export default function OCRWorkspace({ engine }: OCRWorkspaceProps) {
       }
       const url = URL.createObjectURL(file);
       setImageUrl(url);
+      setImageFile(file);
+      setResultView("ai");
       processImage(file, engine);
     },
     [imageUrl, processImage, engine]
@@ -53,6 +65,8 @@ export default function OCRWorkspace({ engine }: OCRWorkspaceProps) {
       URL.revokeObjectURL(imageUrl);
     }
     setImageUrl(null);
+    setImageFile(null);
+    setResultView("raw");
     clearResults();
   };
 
@@ -61,6 +75,8 @@ export default function OCRWorkspace({ engine }: OCRWorkspaceProps) {
       URL.revokeObjectURL(imageUrl);
     }
     setImageUrl(null);
+    setImageFile(null);
+    setResultView("raw");
     clearResults();
   };
 
@@ -77,131 +93,172 @@ export default function OCRWorkspace({ engine }: OCRWorkspaceProps) {
     }
   };
 
-  const getStatusColor = () => {
-    switch (status) {
-      case "processing":
-        return "bg-primary animate-pulse";
-      case "completed":
-        return "bg-green-500";
-      case "failed":
-        return "bg-error";
-      default:
-        return "bg-outline-variant";
-    }
-  };
-
   return (
-    <main className="flex-grow w-full px-4 md:px-10 py-12 max-w-[1280px] mx-auto grid grid-cols-1 md:grid-cols-12 gap-6">
-      {/* Left Column: Upload / Drop Zone (5 columns) */}
-      <section className="md:col-span-5 flex flex-col h-full">
+    <main className="workspace-shell flex-grow">
+      <header className="workspace-intro">
+        <div>
+          <span className="eyebrow">
+            <span className="material-symbols-outlined text-base" aria-hidden="true">document_scanner</span>
+            {getEngineLabel(engine)} workbench
+          </span>
+          <h1 className="workspace-title mt-4">Turn a screenshot into a clean table.</h1>
+          <p className="workspace-copy">
+            Add a document image, compare the raw OCR with the AI-shaped table, then copy the version you trust into Excel.
+          </p>
+        </div>
+        <div className="status-chip" aria-live="polite">
+          <span className="status-dot" data-state={status} aria-hidden="true" />
+          {getStatusLabel()}
+        </div>
+      </header>
+
+      <div className="workbench-grid">
+      <section className="workbench-side" aria-label="Source image">
         {!imageUrl ? (
           <>
             <UploadArea
               onFileSelect={handleFileSelect}
               disabled={status === "processing"}
             />
-            <div className="mt-auto pt-6 flex flex-col items-center justify-center opacity-60">
-              <span className="material-symbols-outlined text-3xl text-outline mb-2">
-                assignment
-              </span>
-              <p className="font-body-sm text-body-sm text-on-surface-variant">
-                Upload or paste an image to start OCR
-              </p>
+            <div className="session-card">
+              <h2 className="panel-title">Three quick passes</h2>
+              <ol className="flow-list mt-4">
+                <li><span className="flow-number">01</span> Read the visible text</li>
+                <li><span className="flow-number">02</span> Shape fields into columns</li>
+                <li><span className="flow-number">03</span> Review and export</li>
+              </ol>
             </div>
           </>
         ) : (
-          <div className="space-y-4">
+          <div className="workbench-side">
             <ImagePreview imageUrl={imageUrl} onClear={handleRemoveImage} />
 
             {status === "processing" && (
-              <div className="flex items-center gap-3 p-4 bg-primary/10 rounded-xl border border-primary/20">
-                <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full" />
-                <span className="text-primary font-body-sm text-body-sm font-medium">
+              <div className="notice notice--processing" role="status">
+                <span className="spinner" aria-hidden="true" />
+                <span>
                   Processing with {getEngineLabel(engine)}...
                 </span>
               </div>
             )}
 
             {status === "failed" && error && (
-              <div className="p-4 bg-error-container rounded-xl border border-error/20">
-                <p className="text-on-error-container font-body-sm text-body-sm">
-                  {error}
-                </p>
+              <div className="notice notice--error" role="alert">
+                <span className="material-symbols-outlined text-lg" aria-hidden="true">error</span>
+                <span>{error}</span>
               </div>
             )}
 
             {status === "completed" && result && (
-              <div className="p-4 bg-green-50 rounded-xl border border-green-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs font-medium text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
-                    {getEngineLabel(engine)}
-                  </span>
-                </div>
-                <div className="grid grid-cols-3 gap-4 text-body-sm font-body-sm">
-                  <div>
-                    <span className="text-on-surface-variant">Detected:</span>
-                    <span className="ml-1 font-semibold text-on-surface">
-                      {result.metrics.detectedBoxes} boxes
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-on-surface-variant">Recognized:</span>
-                    <span className="ml-1 font-semibold text-on-surface">
-                      {result.metrics.recognizedCount} lines
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-on-surface-variant">Time:</span>
-                    <span className="ml-1 font-semibold text-on-surface font-label-code text-label-code">
-                      {result.metrics.totalMs.toFixed(0)}ms
-                    </span>
+              <div className="notice notice--success" role="status">
+                <span className="material-symbols-outlined text-lg" aria-hidden="true">check_circle</span>
+                <div className="w-full">
+                  <strong className="block font-headline-sm">OCR pass complete</strong>
+                  <div className="metrics-grid mt-3">
+                    <div className="metric-card">
+                      <span className="metric-label">Detected</span>
+                      <span className="metric-value">{result.metrics.detectedBoxes} boxes</span>
+                    </div>
+                    <div className="metric-card">
+                      <span className="metric-label">Recognized</span>
+                      <span className="metric-value">{result.metrics.recognizedCount} lines</span>
+                    </div>
+                    <div className="metric-card">
+                      <span className="metric-label">Time</span>
+                      <span className="metric-value">{result.metrics.totalMs.toFixed(0)} ms</span>
+                    </div>
                   </div>
                 </div>
               </div>
             )}
 
             <button
+              type="button"
               onClick={handleClear}
-              className="text-error hover:bg-error-container hover:text-on-error-container font-body-sm text-body-sm font-medium px-3 py-1 rounded-lg transition-colors flex items-center gap-1"
+              className="ui-button ui-button--quiet justify-self-start"
             >
-              <span className="material-symbols-outlined text-sm">refresh</span>
-              Clear &amp; upload new image
+              <span className="material-symbols-outlined text-sm" aria-hidden="true">refresh</span>
+              Start over
             </button>
           </div>
         )}
       </section>
 
-      {/* Right Column: Results Panel (7 columns) */}
-      <section className="md:col-span-7 flex flex-col h-full">
-        <div className="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-[0_10px_15px_-3px_rgba(0,0,0,0.02)] flex flex-col min-h-[460px] overflow-hidden">
-          {/* Results Header */}
-          <div className="px-6 py-4 border-b border-outline-variant/50 bg-surface-bright flex justify-between items-center">
-            <h2 className="font-headline-sm text-headline-sm text-on-surface">
-              Results
-            </h2>
-            <div className="flex items-center gap-2">
-              <span
-                className={`w-2 h-2 rounded-full ${getStatusColor()}`}
-              ></span>
-              <span className="font-body-sm text-body-sm text-on-surface-variant">
-                {getStatusLabel()}
-              </span>
+      <section className="panel result-panel" aria-label="OCR results" aria-busy={status === "processing" || aiStatus === "processing"}>
+          <div className="panel-header">
+            <div className="flex items-center gap-3">
+              <h2 className="panel-title">Review table</h2>
+              {rows.length > 0 && (
+                <div className="segmented" aria-label="Result view">
+                  <button
+                    type="button"
+                    onClick={() => setResultView("raw")}
+                    className="segment-button"
+                    data-active={!showingAi}
+                  >
+                    Raw OCR
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => aiResult && setResultView("ai")}
+                    disabled={!aiResult}
+                    className="segment-button"
+                    data-active={showingAi}
+                  >
+                    AI table
+                    {aiStatus === "processing" && (
+                      <span className="spinner" aria-hidden="true" />
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
+            <span className="panel-subtitle">Double-click a value to edit it</span>
           </div>
 
-          {/* Results Canvas */}
-          <OCRResultTable
-            rows={rows}
-            onRowUpdate={updateRowText}
-            onRowDelete={deleteRow}
-          />
+          {rows.length > 0 && aiStatus === "processing" && (
+            <div className="notice notice--processing m-3" role="status">
+              <span className="spinner" aria-hidden="true" />
+              <span>Correcting OCR and reconstructing the spreadsheet with AI…</span>
+            </div>
+          )}
 
-          {/* Action Bar */}
-          <div className="px-6 py-4 bg-surface-bright border-t border-outline-variant/50 flex flex-wrap gap-3 items-center">
-            <ActionButtons rows={rows} onClear={handleClear} />
+          {rows.length > 0 && aiStatus === "failed" && aiError && (
+            <div className="notice notice--warning m-3 flex-wrap justify-between">
+              <p className="flex items-start gap-2">
+                <span className="material-symbols-outlined text-base" aria-hidden="true">warning</span>
+                <span>Raw OCR is available. AI enhancement failed: {aiError}</span>
+              </p>
+              <button
+                type="button"
+                disabled={!imageFile}
+                onClick={() => imageFile && retryAi(imageFile)}
+                className="ui-button"
+              >
+                Retry AI
+              </button>
+            </div>
+          )}
+
+          {showingAi && aiResult ? (
+            <AIStructuredTable result={aiResult} onCellUpdate={updateAiCell} />
+          ) : (
+            <OCRResultTable
+              rows={rows}
+              onRowUpdate={updateRowText}
+              onRowDelete={deleteRow}
+            />
+          )}
+
+          <div className="panel-footer">
+            <ActionButtons
+              rows={rows}
+              aiResult={showingAi ? aiResult : null}
+              onClear={handleClear}
+            />
           </div>
-        </div>
       </section>
+      </div>
     </main>
   );
 }

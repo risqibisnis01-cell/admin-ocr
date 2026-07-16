@@ -39,19 +39,22 @@ export function OCRResultTable({
 
   if (rows.length === 0) {
     return (
-      <div className="flex-grow p-6 flex flex-col items-center justify-center bg-surface-container-lowest text-on-surface-variant min-h-[300px]">
-        <span className="material-symbols-outlined text-3xl text-outline mb-2">
-          assignment
+      <div className="empty-state">
+        <span className="empty-state-icon" aria-hidden="true">
+          <span className="material-symbols-outlined text-3xl">text_snippet</span>
         </span>
-        <p className="font-body-md text-body-md">No OCR results yet</p>
+        <h3 className="panel-title">No text rows yet</h3>
+        <p className="mt-2 max-w-sm font-body-sm text-body-sm">
+          Add a document image and the detected text will appear here for review.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="overflow-auto max-h-96">
-      <table className="w-full text-body-sm font-body-sm">
-        <thead className="bg-surface-container sticky top-0">
+    <div className="table-scroll">
+      <table className="data-table">
+        <thead>
           <tr>
             <th className="px-4 py-3 text-left font-semibold text-on-surface-variant w-12">
               #
@@ -65,15 +68,13 @@ export function OCRResultTable({
             <th className="px-4 py-3 w-12"></th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-outline-variant/30">
+        <tbody>
           {rows.map((row) => (
-            <tr
-              key={row.id}
-              className="hover:bg-surface-container-low transition-colors"
-            >
-              <td className="px-4 py-3 text-on-surface-variant">{row.id}</td>
+            <tr key={row.id}>
+              <td data-label="Row" className="font-label-code text-label-code text-on-surface-variant">{row.id}</td>
               <td
-                className="px-4 py-3 cursor-text text-on-surface"
+                data-label="Text"
+                className="cursor-text text-on-surface"
                 onDoubleClick={() => handleDoubleClick(row)}
               >
                 {editingId === row.id ? (
@@ -83,23 +84,25 @@ export function OCRResultTable({
                     onChange={(e) => setEditValue(e.target.value)}
                     onBlur={handleBlur}
                     onKeyDown={handleKeyDown}
-                    className="w-full px-2 py-1 border border-outline rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-surface-container-lowest text-on-surface font-body-sm"
+                    className="input-control min-h-10 py-2 pr-3 font-body-sm"
                     autoFocus
                   />
                 ) : (
                   <span>{row.text}</span>
                 )}
               </td>
-              <td className="px-4 py-3 font-label-code text-label-code text-on-surface-variant">
+              <td data-label="Score" className="font-label-code text-label-code text-on-surface-variant">
                 {row.confidence}
               </td>
-              <td className="px-4 py-3">
+              <td data-label="Actions">
                 <button
+                  type="button"
                   onClick={() => onRowDelete(row.id)}
-                  className="text-outline hover:text-error hover:bg-error-container hover:text-on-error-container rounded-lg p-1 transition-colors"
+                  className="icon-button border-transparent bg-transparent text-outline shadow-none"
                   title="Delete row"
+                  aria-label={`Delete row ${row.id}`}
                 >
-                  <span className="material-symbols-outlined text-sm">
+                  <span className="material-symbols-outlined text-lg" aria-hidden="true">
                     delete
                   </span>
                 </button>

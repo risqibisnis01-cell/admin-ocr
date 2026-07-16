@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isRequestAuthenticated } from "@/lib/auth";
 
 /**
  * Server-side proxy for PaddleOCR model downloads.
@@ -10,6 +11,13 @@ import { NextRequest, NextResponse } from "next/server";
 const ALLOWED_HOSTS = ["paddle-model-ecology.bj.bcebos.com"];
 
 export async function GET(request: NextRequest) {
+  if (!isRequestAuthenticated(request)) {
+    return NextResponse.json(
+      { error: "Authentication required." },
+      { status: 401 },
+    );
+  }
+
   const url = request.nextUrl.searchParams.get("url");
 
   if (!url) {

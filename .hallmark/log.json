@@ -1,0 +1,14 @@
+[
+  {
+    "date": "2026-07-16",
+    "scope": "app",
+    "macrostructure": "Workbench",
+    "theme": "custom",
+    "theme_axes": "light warm-paper / rounded-sans / cool-primary with multi-accent utilities",
+    "vibe": "playful paper workbench, soft but exact",
+    "enrichment": "none",
+    "nav": "N1b app-adapted",
+    "footer": "Ft5 Statement",
+    "brief": "VisionExtract multi-page OCR application redesign"
+  }
+]

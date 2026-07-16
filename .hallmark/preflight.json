@@ -1,0 +1,9 @@
+{
+  "scannedAt": "2026-07-16",
+  "fontStack": "Hanken Grotesk + Inter + JetBrains Mono via next/font",
+  "palette": "Existing semantic indigo and cool-surface Tailwind tokens",
+  "motion": "CSS-only; no motion library installed",
+  "spacing": "Existing 8px-oriented scale; redesigned system uses a named 4px scale",
+  "framework": "Next.js 16.2.9 App Router + React 19.2.4 + Tailwind CSS 4",
+  "scope": "Multi-page app: login, PaddleOCR, Tesseract, Google Vision, AI Native"
+}

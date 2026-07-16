@@ -1,19 +1,28 @@
 "use client";
 
 import { useState } from "react";
-import type { OcrTableRow } from "@/types/ocr";
+import { getExportTable, tableToCsv, tableToTsv } from "@/lib/table-export";
+import type { AiStructuredResult, OcrTableRow } from "@/types/ocr";
 
 interface ActionButtonsProps {
   rows: OcrTableRow[];
+  aiResult?: AiStructuredResult | null;
   onClear: () => void;
+  showClear?: boolean;
 }
 
-export function ActionButtons({ rows, onClear }: ActionButtonsProps) {
+export function ActionButtons({
+  rows,
+  aiResult,
+  onClear,
+  showClear = true,
+}: ActionButtonsProps) {
   const [copied, setCopied] = useState(false);
-  const hasResults = rows.length > 0;
+  const table = getExportTable(rows, aiResult);
+  const hasResults = table.rows.length > 0;
 
   const copyToExcel = async () => {
-    const tsv = rows.map((row) => row.text).join("\t");
+    const tsv = tableToTsv(table);
     try {
       await navigator.clipboard.writeText(tsv);
       setCopied(true);
@@ -31,12 +40,7 @@ export function ActionButtons({ rows, onClear }: ActionButtonsProps) {
   };
 
   const exportCSV = () => {
-    const csvContent = rows
-      .map((row) => {
-        const escaped = row.text.replace(/"/g, '""');
-        return `"${escaped}"`;
-      })
-      .join("\n");
+    const csvContent = tableToCsv(table);
 
     const blob = new Blob(["\uFEFF" + csvContent], {
       type: "text/csv;charset=utf-8;",
@@ -52,41 +56,37 @@ export function ActionButtons({ rows, onClear }: ActionButtonsProps) {
   return (
     <>
       <button
+        type="button"
         onClick={copyToExcel}
         disabled={!hasResults}
-        className={`bg-primary text-on-primary font-body-sm text-body-sm font-semibold px-4 py-2 rounded-lg transition-colors shadow-sm flex items-center gap-2 ${
-          hasResults
-            ? "hover:bg-primary-container hover:text-on-primary-container"
-            : "opacity-50 cursor-not-allowed"
-        }`}
+        className="ui-button ui-button--primary"
+        aria-live="polite"
       >
-        <span className="material-symbols-outlined text-sm">table_view</span>
+        <span className="material-symbols-outlined text-sm" aria-hidden="true">
+          {copied ? "check" : "table_view"}
+        </span>
         {copied ? "Copied!" : "Copy to Excel"}
       </button>
       <button
+        type="button"
         onClick={exportCSV}
         disabled={!hasResults}
-        className={`border border-outline bg-transparent text-on-surface font-body-sm text-body-sm font-medium px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
-          hasResults
-            ? "hover:bg-surface-container"
-            : "opacity-50 cursor-not-allowed"
-        }`}
+        className="ui-button"
       >
-        <span className="material-symbols-outlined text-sm">download</span>
+        <span className="material-symbols-outlined text-sm" aria-hidden="true">download</span>
         Export CSV
       </button>
-      <button
-        onClick={onClear}
-        disabled={!hasResults}
-        className={`ml-auto text-error font-body-sm text-body-sm font-medium px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
-          hasResults
-            ? "hover:bg-error-container hover:text-on-error-container"
-            : "opacity-50 cursor-not-allowed"
-        }`}
-      >
-        <span className="material-symbols-outlined text-sm">delete</span>
-        Clear
-      </button>
+      {showClear && (
+        <button
+          type="button"
+          onClick={onClear}
+          disabled={!hasResults}
+          className="ui-button ui-button--danger sm:ml-auto"
+        >
+          <span className="material-symbols-outlined text-sm" aria-hidden="true">delete</span>
+          Clear
+        </button>
+      )}
     </>
   );
 }

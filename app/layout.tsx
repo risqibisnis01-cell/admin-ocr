@@ -22,8 +22,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "VisionExtract - OCR Workspace",
-  description: "Professional Grade OCR Tools - Convert screenshots to Excel-ready data",
+  title: "VisionExtract — OCR Workbench",
+  description: "Turn document images into editable, Excel-ready tables.",
 };
 
 export default function RootLayout({
@@ -45,28 +45,13 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col font-body-md text-body-md">
         <NavBar />
         {children}
-        {/* Footer */}
-        <footer className="bg-surface-container-low text-on-surface font-body-sm text-body-sm border-t border-outline-variant mt-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center w-full py-6 px-4 md:px-10 max-w-[1280px] mx-auto gap-3">
-            <div className="font-headline-sm text-headline-sm font-bold text-on-surface">
-              VisionExtract
-            </div>
-            <div className="text-on-surface-variant text-center md:text-left">
-              © 2024 VisionExtract. Professional Grade OCR Tools.
-            </div>
-            <div className="flex gap-4">
-              <span className="text-on-surface-variant hover:text-primary transition-colors cursor-pointer">
-                Documentation
-              </span>
-              <span className="text-on-surface-variant hover:text-primary transition-colors cursor-pointer">
-                Privacy Policy
-              </span>
-              <span className="text-on-surface-variant hover:text-primary transition-colors cursor-pointer">
-                Terms of Service
-              </span>
-              <span className="text-on-surface-variant hover:text-primary transition-colors cursor-pointer">
-                Support
-              </span>
+        <footer className="app-footer">
+          <div className="footer-shell">
+            <p className="footer-statement">Paperwork in. Rows out.</p>
+            <div className="footer-meta">
+              <strong className="font-headline-sm text-on-surface">VisionExtract</strong>
+              <span>OCR review, AI structuring, and Excel-ready export.</span>
+              <span>© 2026</span>
             </div>
           </div>
         </footer>

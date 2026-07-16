@@ -1,62 +1,78 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+
+const tools = [
+  { href: "/paddleocr", label: "PaddleOCR", shortLabel: "Paddle", icon: "document_scanner" },
+  { href: "/tesseract", label: "Tesseract", shortLabel: "Tesseract", icon: "text_snippet" },
+  { href: "/google-vision", label: "Google Vision", shortLabel: "Vision", icon: "visibility" },
+  { href: "/ai-native", label: "AI Native", shortLabel: "AI Native", icon: "auto_awesome" },
+];
 
 export default function NavBar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const logout = async () => {
+    setLoggingOut(true);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } finally {
+      router.replace("/login");
+      router.refresh();
+      setLoggingOut(false);
+    }
+  };
 
   return (
-    <header className="bg-surface text-primary font-body-md text-body-md border-b border-outline-variant sticky top-0 z-50">
-      <div className="flex justify-between items-center w-full px-4 md:px-10 max-w-[1280px] mx-auto h-16">
-        <div className="flex items-center gap-6 flex-grow">
-          {/* Brand Logo */}
+    <header className="app-nav">
+      <div className="nav-shell">
+        <div className="nav-topline">
           <Link
             href="/paddleocr"
-            className="flex items-center gap-2 font-headline-md text-headline-md font-bold text-primary cursor-pointer"
+            className="brand"
           >
-            <span
-              className="material-symbols-outlined text-3xl"
-              style={{ fontVariationSettings: "'FILL' 1" }}
-            >
+            <span className="brand-mark" aria-hidden="true">
+              <span className="material-symbols-outlined text-2xl">
               document_scanner
+              </span>
             </span>
             VisionExtract
           </Link>
-          {/* Navigation Links (Desktop) */}
-          <nav className="hidden md:flex gap-6 mt-2 h-full items-end ml-auto">
-            <Link
-              href="/paddleocr"
-              className={`pb-2 transition-colors ${
-                pathname === "/paddleocr"
-                  ? "text-primary border-b-2 border-primary font-semibold"
-                  : "text-on-surface-variant hover:text-primary"
-              }`}
+          {pathname !== "/login" && (
+            <button
+              type="button"
+              onClick={logout}
+              disabled={loggingOut}
+              className="logout-button"
+              title="Lock workspace"
             >
-              PaddleOCR
-            </Link>
-            <Link
-              href="/tesseract"
-              className={`pb-2 transition-colors ${
-                pathname === "/tesseract"
-                  ? "text-primary border-b-2 border-primary font-semibold"
-                  : "text-on-surface-variant hover:text-primary"
-              }`}
-            >
-              Tesseract
-            </Link>
-            <Link
-              href="/google-vision"
-              className={`pb-2 transition-colors ${
-                pathname === "/google-vision"
-                  ? "text-primary border-b-2 border-primary font-semibold"
-                  : "text-on-surface-variant hover:text-primary"
-              }`}
-            >
-              Google Vision AI
-            </Link>
-          </nav>
+              <span className="material-symbols-outlined text-lg" aria-hidden="true">logout</span>
+              <span className="hidden sm:inline">{loggingOut ? "Locking…" : "Lock"}</span>
+            </button>
+          )}
         </div>
+        {pathname !== "/login" && (
+          <nav className="tool-nav" aria-label="OCR tools">
+            {tools.map((tool) => (
+              <Link
+                key={tool.href}
+                href={tool.href}
+                className="tool-link"
+                aria-current={pathname === tool.href ? "page" : undefined}
+              >
+                <span className="material-symbols-outlined text-base" aria-hidden="true">
+                  {tool.icon}
+                </span>
+                <span className="sm:hidden">{tool.shortLabel}</span>
+                <span className="hidden sm:inline">{tool.label}</span>
+              </Link>
+            ))}
+          </nav>
+        )}
       </div>
     </header>
   );

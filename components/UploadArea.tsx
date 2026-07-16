@@ -56,23 +56,7 @@ export function UploadArea({ onFileSelect, disabled }: UploadAreaProps) {
   };
 
   return (
-    <div
-      onDragOver={handleDragOver}
-      onDragEnter={handleDragEnter}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-      onClick={handleClick}
-      className={`
-        border-2 border-dashed rounded-xl transition-all duration-300 flex flex-col items-center justify-center p-8 text-center min-h-[360px] cursor-pointer group shadow-sm hover:shadow-md
-        ${
-          disabled
-            ? "border-outline-variant bg-surface-container-lowest cursor-not-allowed"
-            : isDragOver
-            ? "border-primary bg-primary/10"
-            : "border-primary/30 bg-surface-container-lowest hover:bg-primary/5"
-        }
-      `}
-    >
+    <div className="upload-frame">
       <input
         ref={fileInputRef}
         type="file"
@@ -81,23 +65,32 @@ export function UploadArea({ onFileSelect, disabled }: UploadAreaProps) {
         className="hidden"
         disabled={disabled}
       />
-      <div className="bg-surface-container p-4 rounded-full mb-4 group-hover:scale-110 transition-transform duration-300">
-        <span className="material-symbols-outlined text-4xl text-primary">
-          image
+      <button
+        type="button"
+        onDragOver={handleDragOver}
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onClick={handleClick}
+        disabled={disabled}
+        className="upload-zone"
+        data-dragging={isDragOver}
+        aria-describedby="ocr-upload-help"
+      >
+        <span className="upload-icon" aria-hidden="true">
+          <span className="material-symbols-outlined text-3xl">add_photo_alternate</span>
         </span>
-      </div>
-      <h3 className="font-headline-sm text-headline-sm text-on-surface mb-2">
-        Drop image here or click to upload
-      </h3>
-      <p className="font-body-sm text-body-sm text-on-surface-variant mb-6">
-        Supports PNG, JPG, JPEG, WEBP
+        <span className="upload-title">
+          {disabled ? "Reading your image…" : "Choose an image"}
+        </span>
+        <span className="paste-hint">
+          <span className="material-symbols-outlined text-sm" aria-hidden="true">content_paste</span>
+          Ctrl+V also works
+        </span>
+      </button>
+      <p id="ocr-upload-help" className="upload-helper">
+        Drop a file onto the button, or click to browse. PNG, JPEG, and WEBP are supported.
       </p>
-      <div className="inline-flex items-center gap-2 text-primary bg-primary/10 px-4 py-2 rounded-full font-body-sm text-body-sm font-medium">
-        <span className="material-symbols-outlined text-sm">
-          content_paste
-        </span>
-        Press Ctrl+V to paste screenshot
-      </div>
     </div>
   );
 }

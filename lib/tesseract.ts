@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Tesseract from "tesseract.js";
+import type { OcrResult } from "@/types/ocr";
 
 let workerInstance: any = null;
 let initializing = false;
@@ -37,7 +38,7 @@ async function getWorker(): Promise<any> {
 
 export async function runTesseractOcr(
   imageSource: Blob | File
-): Promise<any> {
+): Promise<OcrResult> {
   const worker = await getWorker();
 
   console.log("[Tesseract] Starting recognition...");

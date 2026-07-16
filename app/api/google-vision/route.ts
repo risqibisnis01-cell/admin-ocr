@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isRequestAuthenticated } from "@/lib/auth";
 
 /**
  * Server-side API route for Google Cloud Vision AI OCR.
@@ -9,6 +10,13 @@ import { NextRequest, NextResponse } from "next/server";
 const VISION_API_URL = "https://vision.googleapis.com/v1/images:annotate";
 
 export async function POST(request: NextRequest) {
+  if (!isRequestAuthenticated(request)) {
+    return NextResponse.json(
+      { error: "Authentication required." },
+      { status: 401 },
+    );
+  }
+
   const apiKey = process.env.GOOGLE_VISION_API_KEY;
 
   if (!apiKey) {

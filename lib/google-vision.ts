@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { OcrResult } from "@/types/ocr";
 
 /**
  * Client-side helper that sends an image to our server-side
@@ -16,7 +16,7 @@ function blobToBase64(blob: Blob): Promise<string> {
 
 export async function runGoogleVisionOcr(
   imageSource: Blob | File
-): Promise<any> {
+): Promise<OcrResult> {
   console.log("[Google Vision] Converting image to base64...");
   const base64Image = await blobToBase64(imageSource);
 
@@ -34,7 +34,7 @@ export async function runGoogleVisionOcr(
     );
   }
 
-  const result = await response.json();
+  const result = (await response.json()) as OcrResult;
   console.log("[Google Vision] Recognition complete");
   return result;
 }
